@@ -1,0 +1,37 @@
+# Version:1.0 MMMC View Definition File
+# Do Not Remove Above Line
+create_rc_corner -name RC_corner \
+    -cap_table {/process/T18/IP/CBDK_TSMC018_Arm_v4.0/CIC/INNOVUS_stylus/tsmc018.capTbl} \
+    -qrc_tech {/process/T18/IP/CBDK_TSMC018_Arm_v4.0/CIC/INNOVUS_stylus/FireIce/icecaps_5lm.tch}
+
+create_library_set -name lib_max -timing { \
+    /process/T18/IP/CBDK_TSMC018_Arm_v4.0/CIC/INNOVUS_stylus/lib/slow_si.lib \
+    /process/T18/IP/CBDK_TSMC018_Arm_v4.0/CIC/INNOVUS_stylus/lib/tpz973gvwc.lib \
+    ../ip/rf136x16m4h3v2/rf136x16m4h3v2_slow_syn.lib \
+}
+
+create_library_set -name lib_min -timing { \
+    /process/T18/IP/CBDK_TSMC018_Arm_v4.0/CIC/SynopsysDC/lib/fastcold.lib \
+    /process/T18/IP/CBDK_TSMC018_Arm_v4.0/CIC/INNOVUS_stylus/lib/tpz973gvlt.lib \
+    ../ip/rf136x16m4h3v2/rf136x16m4h3v2_fast@-40C_syn.lib \
+}
+
+create_opcond -name OC_1p62v_125c -process 1 -voltage 1.62 -temperature 125 
+create_opcond -name OC_1p98v_m40c -process 1 -voltage 1.98 -temperature -40
+
+create_timing_condition -name TC_max -library_set {lib_max} -opcond OC_1p62v_125c
+create_timing_condition -name TC_min -library_set {lib_min} -opcond OC_1p98v_m40c
+
+create_delay_corner -name DC_max -timing_condition {TC_max} -rc_corner {RC_corner}
+create_delay_corner -name DC_min -timing_condition {TC_min} -rc_corner {RC_corner}
+
+create_constraint_mode -name CM_func -sdc_files {CHIP_func.sdc}
+# create_constraint_mode -name CM_scan -sdc_files {CHIP_scan.sdc}
+
+create_analysis_view -name AV_func_max -constraint_mode {CM_func} -delay_corner {DC_max}
+create_analysis_view -name AV_func_min -constraint_mode {CM_func} -delay_corner {DC_min}
+# create_analysis_view -name AV_scan_max -constraint_mode {CM_scan} -delay_corner {DC_max}
+# create_analysis_view -name AV_scan_min -constraint_mode {CM_scan} -delay_corner {DC_min}
+
+set_analysis_view -setup {AV_func_max} -hold {AV_func_max AV_func_min}
+# set_analysis_view -setup {AV_func_max AV_scan_max} -hold {AV_func_max AV_func_min AV_scan_min}
